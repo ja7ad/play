@@ -1,3 +1,3 @@
 [submodule "src"]
 	path = src
-	url = git@github.com:golang/playground.git
+	url = https://github.com/golang/playground.git
