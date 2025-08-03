@@ -2,9 +2,9 @@ version: '3'
 services:
 
   sandbox:
-    image: soulteary/golang-playground:sandbox-1.19.0
+    image: ja7adr/golang-playground:sandbox-1.24.0
     restart: always
-    command: -mode=server -listen=0.0.0.0:80 -workers=1 -untrusted-container=soulteary/golang-playground:actuator-1.19.0
+    command: -mode=server -listen=0.0.0.0:80 -workers=1 -untrusted-container=ja7adr/golang-playground:actuator-1.24.0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -13,7 +13,7 @@ services:
       - memcached
 
   web:
-    image: soulteary/golang-playground:web-1.19.0
+    image: ja7adr/golang-playground:web-1.24.0
     restart: always
     environment:
       - SANDBOX_BACKEND_URL=http://sandbox:/run
@@ -30,5 +30,5 @@ services:
     command: memcached -m 64
     networks:
       - playground
-networks: 
+networks:
   playground:
