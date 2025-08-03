@@ -19,7 +19,7 @@ services:
       - SANDBOX_BACKEND_URL=http://sandbox:/run
       - MEMCACHED_ADDR=memcached:11211
     ports:
-      - 8080:8080
+      - 9023:8080
     depends_on:
       - sandbox
     networks:

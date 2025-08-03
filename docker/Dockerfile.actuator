@@ -27,4 +27,9 @@ ENTRYPOINT ["/bin/play-sandbox"]
 FROM busybox:glibc
 COPY --from=build-actuator /bin/play-sandbox /bin/play-sandbox
 COPY --from=build-actuator /usr/share/zoneinfo /usr/share/zoneinfo
+
+ENV HOME=/tmp
+ENV DOCKER_CONFIG=/tmp/.docker
+RUN mkdir -p /tmp/.docker && echo '{}' > /tmp/.docker/config.json
+
 ENTRYPOINT ["/bin/play-sandbox"]

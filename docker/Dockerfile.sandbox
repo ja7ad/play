@@ -1,24 +1,49 @@
 ARG GO_VERSION=1.24
 FROM golang:${GO_VERSION}-alpine AS build-sandbox
-# base deps
-RUN apk update && apk add tzdata
-# download golang deps
+
+# Install base build deps (timezone data)
+RUN apk update && apk add --no-cache tzdata
+
+# Set Go module mode
 ENV GO111MODULE=on
-COPY src/go.mod /go/src/playground/go.mod
-COPY src/go.sum /go/src/playground/go.sum
+
+# Prepare workspace
 WORKDIR /go/src/playground
+
+# Cache dependencies
+COPY src/go.mod src/go.sum ./
 RUN go mod download
-# build golang binaries
-COPY ./src /go/src/playground
+
+# Copy and build sandbox binary
+COPY ./src ./
 WORKDIR /go/src/playground/sandbox
-RUN CGO_ENABLED=0 go build -ldflags "-w -s" .
+RUN CGO_ENABLED=0 go build -ldflags "-w -s" -o /go/bin/play-sandbox .
 
-
-
+# ---------------------------
+# Runtime stage
+# ---------------------------
 FROM alpine
 LABEL maintainer="ja7ad"
-RUN echo "Asia/Tehran" > /etc/timezone
-RUN apk add --no-cache docker-cli
-COPY --from=build-sandbox /go/src/playground/sandbox/sandbox /bin/play-sandbox
+
+# Install Docker CLI and timezone data
+RUN apk add --no-cache docker-cli tzdata
+
+# Set timezone (Asia/Tehran)
+RUN cp /usr/share/zoneinfo/Asia/Tehran /etc/localtime && \
+    echo "Asia/Tehran" > /etc/timezone
+
+# Copy binary and zoneinfo files
+COPY --from=build-sandbox /go/bin/play-sandbox /bin/play-sandbox
 COPY --from=build-sandbox /usr/share/zoneinfo /usr/share/zoneinfo
-ENTRYPOINT ["/bin/play-sandbox"]
+
+# Set safe runtime env vars
+ENV HOME=/tmp
+ENV DOCKER_CONFIG=/tmp/.docker
+ENV GOCACHE=/tmp/gocache
+
+# Create clean Docker and GOCACHE dirs to avoid runtime errors
+RUN mkdir -p /tmp/.docker && echo '{}' > /tmp/.docker/config.json && \
+    mkdir -p /tmp/gocache
+
+EXPOSE 8081
+ENTRYPOINT ["/bin/play-sandbox", "-listen", ":8081"]
